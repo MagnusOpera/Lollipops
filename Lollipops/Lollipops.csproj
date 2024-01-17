@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -12,6 +12,8 @@
     <PackageReference Include="NuGet.LibraryModel" Version="6.8.0" />
     <PackageReference Include="NuGet.Commands" Version="6.8.0" />
     <PackageReference Include="NuGet.Resolver" Version="6.8.0" />
+    <PackageReference Include="NuGet.PackageManagement" Version="6.8.0" />
+    <PackageReference Include="Microsoft.DotNet.PlatformAbstractions" Version="3.1.6" />
   </ItemGroup>
 
 </Project>
