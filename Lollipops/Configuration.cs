@@ -23,10 +23,6 @@ public record Configuration {
 public static class ConfigurationExtensions {
 
     public static async Task<IContainerBuilder> Install(this Configuration configuration, string downloadFolder) {
-        if (!Directory.Exists(downloadFolder)) {
-            Directory.CreateDirectory(downloadFolder);
-        }
-
         var logger = NullLogger.Instance;
 
         var providers = new List<Lazy<INuGetResourceProvider>>();
