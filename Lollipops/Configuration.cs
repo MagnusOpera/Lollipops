@@ -64,7 +64,7 @@ public static class ConfigurationExtensions {
 
         async Task<string[]> installPackage(Package package) {
             var metadata = await searchPackage(package)
-                         ?? throw new ApplicationException($"Failed to resolve {package}");
+                         ?? throw new Exception($"Package '{package}' is not available");
 
             var packageIds = await downloadPackage();
 
@@ -74,7 +74,7 @@ public static class ConfigurationExtensions {
             var mostCompatibleFramework = new FrameworkReducer().GetNearest(nugetFramework, itemGroups.Select(x => x.TargetFramework));
 
             var mostCompatibleGroup = itemGroups.FirstOrDefault(i => i.TargetFramework == mostCompatibleFramework)
-                                    ?? throw new ApplicationException($"Package {package.Id} is not compatible with {mostCompatibleFramework}");
+                                    ?? throw new Exception($"Package '{package}' is not compatible with {mostCompatibleFramework}");
 
             var dependencyFiles = new List<string>();
             foreach (var packageId in packageIds) {
@@ -91,7 +91,7 @@ public static class ConfigurationExtensions {
                 if (package.Version is not null) {
                     // find exact version
                     if (!NuGetVersion.TryParse(package.Version, out var nugetVersion)) {
-                        throw new ApplicationException($"Invalid version '{package.Version}' for package '{package.Id}'");
+                        throw new Exception($"Invalid version '{package.Version}' for package '{package.Id}'");
                     }
 
                     var packageIdentity = new PackageIdentity(package.Id, nugetVersion);
