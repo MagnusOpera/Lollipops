@@ -126,7 +126,7 @@ public static class ConfigurationExtensions {
                                                                   VersionConstraints.None);
 
                     var projectContext = new ProjectContext {
-                        PackageExtractionContext = new PackageExtractionContext(PackageSaveMode.Defaultv2,
+                        PackageExtractionContext = new PackageExtractionContext(PackageSaveMode.Defaultv3,
                                                                                 XmlDocFileSaveMode.None,
                                                                                 ClientPolicyContext.GetClientPolicy(settings, logger),
                                                                                 logger)

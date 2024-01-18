@@ -9,7 +9,8 @@ var config = new Configuration
     Packages = [new Package { Id = "MagnusOpera.PresqueYaml", Version = "0.24.0" }]
 };
 
-var containerBuilder = await config.Install("/Users/pierre/src/MagnusOpera/Lollipops/toto");
+var currentDir = Environment.CurrentDirectory;
+var containerBuilder = await config.Install(Path.Combine(currentDir, "test-lollipops"));
 var programAssembly = new AssemblyCatalog(Assembly.GetExecutingAssembly());
 containerBuilder.Add(programAssembly);
 
