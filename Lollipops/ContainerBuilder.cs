@@ -15,6 +15,9 @@ using NuGet.Packaging;
 using NuGet.ProjectManagement;
 using System.Xml.Linq;
 using NuGet.Packaging.Signing;
+using System.ComponentModel.Composition.Hosting;
+using System.ComponentModel.Composition.Primitives;
+using System.ComponentModel.Composition;
 
 public record Package {
     public required string Id { get; init; }
@@ -22,7 +25,25 @@ public record Package {
     public bool PreRelease { get; init; }
 }
 
-public class Container {
+
+public class Container(CompositionContainer container) {
+    public T Resolve<T>(string? name = null) {
+        return container.GetExport<T>(name).Value;
+    }
+}
+
+
+public class ContainerBuilder(AggregateCatalog aggregateCatalog) {
+    public void Add(ComposablePartCatalog part) {
+        aggregateCatalog.Catalogs.Add(part);
+    }
+
+    public Container Build() {
+        var container = new CompositionContainer(aggregateCatalog);
+        container.ComposeParts();
+
+        return new Container(container);
+    }    
 }
 
 public record Configuration {
@@ -46,13 +67,13 @@ public class MachineWideSettings : IMachineWideSettings {
 
 
 public class ProjectContext : INuGetProjectContext {
-    public PackageExtractionContext PackageExtractionContext { get; set; } = null!;
+    public PackageExtractionContext? PackageExtractionContext { get; set; } = null;
 
-    public ISourceControlManagerProvider SourceControlManagerProvider => null!;
+    public ISourceControlManagerProvider? SourceControlManagerProvider => null;
 
-    public ExecutionContext ExecutionContext => null!;
+    public ExecutionContext? ExecutionContext => null;
 
-    public XDocument OriginalPackagesConfig { get; set; } = null!;
+    public XDocument? OriginalPackagesConfig { get; set; } = null;
 
     public NuGetActionType ActionType { get; set; }
 
@@ -78,7 +99,7 @@ public class ProjectContext : INuGetProjectContext {
 
 public static class ConfigurationExtensions {
 
-    public static async Task Install(this Configuration configuration, string downloadFolder) {
+    public static async Task<ContainerBuilder> Install(this Configuration configuration, string downloadFolder) {
         if (!Directory.Exists(downloadFolder)) {
             Directory.CreateDirectory(downloadFolder);
         }
@@ -106,16 +127,26 @@ public static class ConfigurationExtensions {
         var frameworkNameProvider = new FrameworkNameProvider([DefaultFrameworkMappings.Instance], [DefaultPortableFrameworkMappings.Instance]);
         var nugetFramework = NuGetFramework.ParseFrameworkName(targetFramework!, frameworkNameProvider)!;
 
+        var allCatalogs = new AggregateCatalog();
         foreach (var package in configuration.Packages) {
-            await installPackage(package);
+            var nugetCatalog = new AggregateCatalog();
+            var nugetFiles = await installPackage(package);
+            foreach (var file in nugetFiles) {
+                var assemblyCatalog = new AssemblyCatalog(file);
+                nugetCatalog.Catalogs.Add(assemblyCatalog);
+            }
+
+            allCatalogs.Catalogs.Add(nugetCatalog);
         }
 
-        async Task installPackage(Package package) {
+        return new ContainerBuilder(allCatalogs);
+
+        async Task<string[]> installPackage(Package package) {
             var metadata = await searchPackage(package)
                          ?? throw new ApplicationException($"Failed to resolve {package}");
             Console.WriteLine($"Successfully resolved {package} with version {metadata.Identity.Version}");
 
-            await downloadPackage();
+            var packageIds = await downloadPackage();
 
             var packageFilePath = project.GetInstalledPackageFilePath(metadata.Identity)
                                 ?? throw new ApplicationException("Failed to find package files");
@@ -128,12 +159,14 @@ public static class ConfigurationExtensions {
             var mostCompatibleGroup = itemGroups.FirstOrDefault(i => i.TargetFramework == mostCompatibleFramework)
                                     ?? throw new ApplicationException("Failed to find compatible fx");
 
-            var nugetPackagePath = project.GetInstalledPath(metadata.Identity);
-            foreach (var item in mostCompatibleGroup.Items) {
-                var sourceAssemblyPath = Path.Combine(nugetPackagePath, item);
-                var assemblyName = Path.GetFileName(sourceAssemblyPath);
-                Console.WriteLine($"Assembly: {assemblyName}");
+            var dependencyFiles = new List<string>();
+            foreach (var packageId in packageIds) {
+                var nugetPackagePath = project.GetInstalledPath(metadata.Identity);
+                var nugetFiles = mostCompatibleGroup.Items.Select(item => Path.Combine(nugetPackagePath, item)).ToArray();
+                dependencyFiles.AddRange(dependencyFiles);
             }
+
+            return [.. dependencyFiles];
 
             async Task<IPackageSearchMetadata?> searchPackage(Package package) {
                 if (package.Version is not null) {
@@ -160,35 +193,36 @@ public static class ConfigurationExtensions {
                 return results.OrderByDescending(p => p.Identity.Version).FirstOrDefault();
             }
 
-            async Task downloadPackage() {
-                if (packageManager.PackageExistsInPackagesFolder(metadata.Identity, PackageSaveMode.None)) {
-                    return;
+            async Task<PackageIdentity[]> downloadPackage() {
+                if (!packageManager.PackageExistsInPackagesFolder(metadata.Identity, PackageSaveMode.None)) {
+                    var resolutionContext = new ResolutionContext(DependencyBehavior.Lowest,
+                                                                  true,
+                                                                  includeUnlisted: false,
+                                                                  VersionConstraints.None);
+
+                    var projectContext = new ProjectContext {
+                        PackageExtractionContext = new PackageExtractionContext(PackageSaveMode.Defaultv2,
+                                                                                XmlDocFileSaveMode.None,
+                                                                                ClientPolicyContext.GetClientPolicy(settings, logger),
+                                                                                logger)
+                    };
+
+                    var downloadContext = new PackageDownloadContext(resolutionContext.SourceCacheContext,
+                                                                     downloadFolder,
+                                                                     resolutionContext.SourceCacheContext.DirectDownload);
+
+                    await packageManager.InstallPackageAsync(project,
+                                                             metadata.Identity,
+                                                             resolutionContext,
+                                                             projectContext,
+                                                             downloadContext,
+                                                             [repository],
+                                                             [],
+                                                             CancellationToken.None);
                 }
 
-                var resolutionContext = new ResolutionContext(DependencyBehavior.Lowest,
-                                                              true,
-                                                              includeUnlisted: false,
-                                                              VersionConstraints.None);
-
-                var projectContext = new ProjectContext {
-                    PackageExtractionContext = new PackageExtractionContext(PackageSaveMode.Defaultv2,
-                                                                            XmlDocFileSaveMode.None,
-                                                                            ClientPolicyContext.GetClientPolicy(settings, logger),
-                                                                            logger)
-                };
-
-                var downloadContext = new PackageDownloadContext(resolutionContext.SourceCacheContext,
-                                                                 downloadFolder,
-                                                                 resolutionContext.SourceCacheContext.DirectDownload);
-
-                await packageManager.InstallPackageAsync(project,
-                                                         metadata.Identity,
-                                                         resolutionContext,
-                                                         projectContext,
-                                                         downloadContext,
-                                                         [repository],
-                                                         [],
-                                                         CancellationToken.None);
+                var allPackages = await packageManager.GetInstalledPackagesInDependencyOrder(project, CancellationToken.None);
+                return allPackages.ToArray();
             }
         }
     }
