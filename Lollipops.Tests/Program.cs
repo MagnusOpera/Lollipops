@@ -14,9 +14,11 @@ var programAssembly = new AssemblyCatalog(Assembly.GetExecutingAssembly());
 containerBuilder.Add(programAssembly);
 
 var container = containerBuilder.Build();
-var toto = container.Resolve<IToto>("toto");
-toto.Say("Hello from Lollipops");
+var toto1 = container.Resolve<IToto>("toto");
+toto1.Say("Hello from Lollipops");
 
+var toto2 = container.Resolve<IToto>("toto");
+toto2.Say("Hello from Lollipops 2");
 
 
 public interface IToto {
@@ -27,6 +29,6 @@ public interface IToto {
 [Export("toto", typeof(IToto))]
 public class Toto : IToto {
     public void Say(string msg) {
-        Console.WriteLine(msg);
+        Console.WriteLine($"{msg} from instance {GetHashCode()}");
     }
 }
