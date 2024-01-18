@@ -36,12 +36,11 @@ public static class ConfigurationExtensions {
             PackagesFolderNuGetProject = project
         };
 
-        var source = new PackageSource("https://api.nuget.org/v3/index.json");
-        var repository = Repository.Factory.GetCoreV3(source);
+        var repository = sourceRepositoryProvider.GetRepositories().First();
         var packageMetadataResource = await repository.GetResourceAsync<PackageMetadataResource>();
-        var findPackageResource = await repository.GetResourceAsync<FindPackageByIdResource>();
         using var sourceCacheContext = new SourceCacheContext();
 
+        // find host runtime
         var targetFramework = Assembly.GetEntryAssembly()!.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName;
         var frameworkNameProvider = new FrameworkNameProvider([DefaultFrameworkMappings.Instance], [DefaultPortableFrameworkMappings.Instance]);
         var nugetFramework = NuGetFramework.ParseFrameworkName(targetFramework!, frameworkNameProvider)!;

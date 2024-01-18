@@ -8,7 +8,7 @@ public interface IContainerBuilder {
     IContainer Build();
 }
 
-public class ContainerBuilder(AggregateCatalog aggregateCatalog) : IContainerBuilder {
+internal class ContainerBuilder(AggregateCatalog aggregateCatalog) : IContainerBuilder {
     public void Add(ComposablePartCatalog part) {
         aggregateCatalog.Catalogs.Add(part);
     }

@@ -11,25 +11,32 @@ var config = new Configuration
 
 var currentDir = Environment.CurrentDirectory;
 var containerBuilder = await config.Install(Path.Combine(currentDir, "test-lollipops"));
+
 var programAssembly = new AssemblyCatalog(Assembly.GetExecutingAssembly());
 containerBuilder.Add(programAssembly);
-
 var container = containerBuilder.Build();
-var toto1 = container.Resolve<IToto>("toto");
-toto1.Say("Hello from Lollipops");
 
-var toto2 = container.Resolve<IToto>("toto");
-toto2.Say("Hello from Lollipops 2");
+var toto = container.Resolve<IExtension>("toto");
+toto.Say("Hello Lollipops");
 
+var titi = container.Resolve<IExtension>("titi");
+titi.Say("Hello Lollipops");
 
-public interface IToto {
+public interface IExtension {
     void Say(string msg);
 }
 
 
-[Export("toto", typeof(IToto))]
-public class Toto : IToto {
+[Export("toto", typeof(IExtension))]
+public class Toto : IExtension {
     public void Say(string msg) {
-        Console.WriteLine($"{msg} from instance {GetHashCode()}");
+        Console.WriteLine($"{msg} from Toto");
+    }
+}
+
+[Export("titi", typeof(IExtension))]
+public class Titi : IExtension {
+    public void Say(string msg) {
+        Console.WriteLine($"{msg} from Titi");
     }
 }
