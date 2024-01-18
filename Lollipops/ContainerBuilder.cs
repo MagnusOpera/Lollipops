@@ -2,8 +2,6 @@
 
 using System.Reflection;
 using System.Runtime.Versioning;
-using System.Text.Json;
-using Microsoft.VisualBasic;
 using NuGet.Common;
 using NuGet.Configuration;
 using NuGet.Frameworks;
@@ -16,7 +14,6 @@ using NuGet.Resolver;
 using NuGet.Packaging;
 using NuGet.ProjectManagement;
 using System.Xml.Linq;
-using System.Globalization;
 using NuGet.Packaging.Signing;
 
 public record Package {
@@ -99,7 +96,6 @@ public static class ConfigurationExtensions {
             PackagesFolderNuGetProject = project,
         };
 
-
         var source = new PackageSource("https://api.nuget.org/v3/index.json");
         var repository = Repository.Factory.GetCoreV3(source);
         var packageMetadataResource = await repository.GetResourceAsync<PackageMetadataResource>();
@@ -111,87 +107,88 @@ public static class ConfigurationExtensions {
         var nugetFramework = NuGetFramework.ParseFrameworkName(targetFramework!, frameworkNameProvider)!;
 
         foreach (var package in configuration.Packages) {
-            var metadata = await searchPackage(package);
-            if (metadata is null) {
-                Console.WriteLine($"Failed to resolve {package}");
-            } else {
-                Console.WriteLine($"Successfully resolved {package} with version {metadata.Identity.Version}");
-
-                if (!packageManager.PackageExistsInPackagesFolder(metadata.Identity, PackageSaveMode.None)) {
-                    var resolutionContext = new ResolutionContext(DependencyBehavior.Lowest,
-                                                                  true,
-                                                                  includeUnlisted: false,
-                                                                  VersionConstraints.None);
-
-                    var projectContext = new ProjectContext {
-                        PackageExtractionContext = new PackageExtractionContext(PackageSaveMode.Defaultv2,
-                                                                                XmlDocFileSaveMode.None,
-                                                                                ClientPolicyContext.GetClientPolicy(settings, logger),
-                                                                                logger)
-                    };
-
-                    var downloadContext = new PackageDownloadContext(resolutionContext.SourceCacheContext,
-                                                                     downloadFolder,
-                                                                     resolutionContext.SourceCacheContext.DirectDownload);
-
-                    await packageManager.InstallPackageAsync(project,
-                        metadata.Identity,
-                        resolutionContext,
-                        projectContext,
-                        downloadContext,
-                        [repository],
-                        [],
-                        CancellationToken.None);
-                }
-
-                var packageFilePath = project.GetInstalledPackageFilePath(metadata.Identity);
-                if (packageFilePath is null) {
-                    Console.WriteLine("Failed to find package files");
-                } else {
-                    using var archiveReader = new PackageArchiveReader(packageFilePath, null, null);
-                    var itemGroups = archiveReader.GetReferenceItems();
-                    var mostCompatibleFramework = new FrameworkReducer().GetNearest(nugetFramework, itemGroups.Select(x => x.TargetFramework));
-                    if (mostCompatibleFramework is null) {
-                        Console.WriteLine("Failed to find com files");
-                    } else {
-                        Console.WriteLine($"Found {mostCompatibleFramework}");
-
-                        var mostCompatibleGroup = itemGroups.FirstOrDefault(i => i.TargetFramework == mostCompatibleFramework);
-                        if (mostCompatibleGroup is null) {
-                            Console.WriteLine("Failed to find compatible fx");
-                        } else {
-                            var nugetPackagePath = project.GetInstalledPath(metadata.Identity);
-                            foreach(var item in mostCompatibleGroup.Items) {
-                                var sourceAssemblyPath = Path.Combine(nugetPackagePath, item);
-                                var assemblyName = Path.GetFileName(sourceAssemblyPath);
-                                Console.WriteLine($"Assembly: {assemblyName}");
-                            }
-                        }
-                    }
-                }
-            }
+            await installPackage(package);
         }
 
-        async Task<IPackageSearchMetadata?> searchPackage(Package package) {
-            if (package.Version is not null) {
-                if (!NuGetVersion.TryParseStrict(package.Version, out var nugetVersion)) {
-                    throw new ApplicationException($"Invalid version '{package.Version}' for package '{package.Id}'");
+        async Task installPackage(Package package) {
+            var metadata = await searchPackage(package)
+                         ?? throw new ApplicationException($"Failed to resolve {package}");
+            Console.WriteLine($"Successfully resolved {package} with version {metadata.Identity.Version}");
+
+            await downloadPackage();
+
+            var packageFilePath = project.GetInstalledPackageFilePath(metadata.Identity)
+                                ?? throw new ApplicationException("Failed to find package files");
+            using var archiveReader = new PackageArchiveReader(packageFilePath, null, null);
+            var itemGroups = archiveReader.GetReferenceItems();
+            var mostCompatibleFramework = new FrameworkReducer().GetNearest(nugetFramework, itemGroups.Select(x => x.TargetFramework))
+                                        ?? throw new ApplicationException("Failed to find com files");
+            Console.WriteLine($"Found {mostCompatibleFramework}");
+
+            var mostCompatibleGroup = itemGroups.FirstOrDefault(i => i.TargetFramework == mostCompatibleFramework)
+                                    ?? throw new ApplicationException("Failed to find compatible fx");
+
+            var nugetPackagePath = project.GetInstalledPath(metadata.Identity);
+            foreach (var item in mostCompatibleGroup.Items) {
+                var sourceAssemblyPath = Path.Combine(nugetPackagePath, item);
+                var assemblyName = Path.GetFileName(sourceAssemblyPath);
+                Console.WriteLine($"Assembly: {assemblyName}");
+            }
+
+            async Task<IPackageSearchMetadata?> searchPackage(Package package) {
+                if (package.Version is not null) {
+                    // find exact version
+                    if (!NuGetVersion.TryParse(package.Version, out var nugetVersion)) {
+                        throw new ApplicationException($"Invalid version '{package.Version}' for package '{package.Id}'");
+                    }
+
+                    var packageIdentity = new PackageIdentity(package.Id, nugetVersion);
+                    var packageMetadata = await packageMetadataResource.GetMetadataAsync(packageIdentity,
+                                                                                        sourceCacheContext,
+                                                                                        logger,
+                                                                                        CancellationToken.None);
+                    return packageMetadata;
                 }
 
-                var packageIdentity = new PackageIdentity(package.Id, nugetVersion);
-                var packageMetadata = await packageMetadataResource.GetMetadataAsync(packageIdentity,
-                                                                                     sourceCacheContext,
-                                                                                     NullLogger.Instance,
-                                                                                     CancellationToken.None);
-                return packageMetadata;
-            } else {
+                // find latest version
                 var results = await packageMetadataResource.GetMetadataAsync(package.Id,
-                                                                             package.PreRelease,
-                                                                             false,
-                                                                             sourceCacheContext,
-                                                                             NullLogger.Instance,
-                                                                             CancellationToken.None);
+                                                                            package.PreRelease,
+                                                                            false,
+                                                                            sourceCacheContext,
+                                                                            logger,
+                                                                            CancellationToken.None);
                 return results.OrderByDescending(p => p.Identity.Version).FirstOrDefault();
+            }
+
+            async Task downloadPackage() {
+                if (packageManager.PackageExistsInPackagesFolder(metadata.Identity, PackageSaveMode.None)) {
+                    return;
+                }
+
+                var resolutionContext = new ResolutionContext(DependencyBehavior.Lowest,
+                                                              true,
+                                                              includeUnlisted: false,
+                                                              VersionConstraints.None);
+
+                var projectContext = new ProjectContext {
+                    PackageExtractionContext = new PackageExtractionContext(PackageSaveMode.Defaultv2,
+                                                                            XmlDocFileSaveMode.None,
+                                                                            ClientPolicyContext.GetClientPolicy(settings, logger),
+                                                                            logger)
+                };
+
+                var downloadContext = new PackageDownloadContext(resolutionContext.SourceCacheContext,
+                                                                 downloadFolder,
+                                                                 resolutionContext.SourceCacheContext.DirectDownload);
+
+                await packageManager.InstallPackageAsync(project,
+                                                         metadata.Identity,
+                                                         resolutionContext,
+                                                         projectContext,
+                                                         downloadContext,
+                                                         [repository],
+                                                         [],
+                                                         CancellationToken.None);
             }
         }
     }
