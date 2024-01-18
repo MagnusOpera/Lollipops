@@ -1,5 +1,4 @@
 namespace Lollipops;
-
 using NuGet.Common;
 using NuGet.Packaging;
 using NuGet.ProjectManagement;
