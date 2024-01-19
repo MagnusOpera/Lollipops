@@ -4,11 +4,8 @@ version ?= 0.0.0
 build:
 	dotnet build -c $(config)
 
-run:
-	dotnet run --project Lollipops.Tests
-
 test:
-	dotnet test -c $(config) --logger "trx;LogFileName=test-results.trx"
+	dotnet run --project Tests/TestApp
 
 nuget:
 	dotnet pack -c $(config) /p:Version=$(version) -o out

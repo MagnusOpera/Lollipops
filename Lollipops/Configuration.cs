@@ -14,8 +14,10 @@ using NuGet.Packaging;
 using NuGet.ProjectManagement;
 using NuGet.Packaging.Signing;
 using System.ComponentModel.Composition.Hosting;
+using NuGet.Protocol;
 
 public record Configuration {
+    public string[]? Sources { get; init; }
     public required Package[] Packages { get; init; }
 }
 
@@ -24,8 +26,7 @@ public static class ConfigurationExtensions {
     public static async Task<IContainerBuilder> Install(this Configuration configuration, string downloadFolder) {
         var logger = NullLogger.Instance;
 
-        var providers = new List<Lazy<INuGetResourceProvider>>();
-        providers.AddRange(Repository.Provider.GetCoreV3()); // Add v3 API s
+        var providers = buildProviders();
 
         var project = new FolderNuGetProject(downloadFolder);
         var settings = Settings.LoadDefaultSettings(downloadFolder, null, new MachineWideSettings());
@@ -57,6 +58,21 @@ public static class ConfigurationExtensions {
         }
 
         return new ContainerBuilder(allCatalogs);
+
+        List<Lazy<INuGetResourceProvider>> buildProviders() {
+            var providers = new List<Lazy<INuGetResourceProvider>>();
+
+            if (configuration.Sources is null) {
+                providers.AddRange(Repository.Provider.GetCoreV3());
+            } else {
+                foreach (var source in configuration.Sources) {
+                    var sourceRepository = new SourceRepository(new PackageSource(source), providers);
+                    sourceRepository.GetResource<PackageMetadataResource>();
+                }
+            }
+
+            return providers;
+        }
 
 
 
