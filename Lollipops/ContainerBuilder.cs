@@ -43,7 +43,9 @@ public static class ContainerBuilderExtensions {
     public static async Task<IContainerBuilder> Install(this Configuration configuration, string projectFolder) {
         var logger = NullLogger.Instance;
 
-        Directory.Delete(projectFolder, true);
+        if (Directory.Exists(projectFolder)) {
+            Directory.Delete(projectFolder, true);
+        }
 
         var providers = new List<Lazy<INuGetResourceProvider>>();
         providers.AddRange(Repository.Provider.GetCoreV3());
