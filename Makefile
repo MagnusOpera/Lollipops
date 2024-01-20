@@ -11,4 +11,4 @@ test:
 	dotnet run -c $(config) --project Tests/TestApp
 
 publish:
-	dotnet nuget push .out/MagnusOpera.Lollipops.$(version).nupkg -k $(nugetkey) -s https://api.nuget.org/v3/index.json --skip-duplicate
+	dotnet nuget push .nugets/MagnusOpera.Lollipops.$(version).nupkg -k $(nugetkey) -s https://api.nuget.org/v3/index.json --skip-duplicate
