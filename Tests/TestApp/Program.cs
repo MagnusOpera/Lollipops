@@ -1,5 +1,5 @@
 ﻿using System.Reflection;
-using Lollipops;
+using MagnusOpera.Lollipops;
 
 var appDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
 var slnDir = Path.GetFullPath(Path.Combine(appDir, "../../../../.."));

@@ -1,4 +1,4 @@
-namespace Lollipops;
+namespace MagnusOpera.Lollipops;
 
 using NuGet.Common;
 using NuGet.Configuration;

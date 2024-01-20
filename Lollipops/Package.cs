@@ -1,4 +1,4 @@
-namespace Lollipops;
+namespace MagnusOpera.Lollipops;
 
 public record Package {
     public required string Id { get; init; }

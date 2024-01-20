@@ -1,4 +1,4 @@
-namespace Lollipops;
+namespace MagnusOpera.Lollipops;
 using System.ComponentModel.Composition.Hosting;
 
 public interface IContainer {

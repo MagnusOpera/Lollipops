@@ -1,4 +1,4 @@
-namespace Lollipops;
+namespace MagnusOpera.Lollipops;
 
 using System.Reflection;
 using System.Runtime.Versioning;
