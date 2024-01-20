@@ -4,7 +4,6 @@ using Lollipops;
 var appDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
 var slnDir = Path.GetFullPath(Path.Combine(appDir, "../../../../.."));
 
-Console.WriteLine(slnDir);
 var nugetLocal = Path.GetFullPath(Path.Combine(slnDir, ".nugets"));
 var projectDir = Path.GetFullPath(Path.Combine(slnDir, ".lollipops"));
 
