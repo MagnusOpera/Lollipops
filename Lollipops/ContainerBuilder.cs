@@ -17,7 +17,7 @@ using NuGet.Resolver;
 using NuGet.Packaging;
 using NuGet.Packaging.Signing;
 using NuGet.Protocol;
-
+using NuGet.ProjectManagement;
 
 public interface IContainerBuilder {
     void Add(ComposablePartCatalog part);
@@ -43,10 +43,12 @@ public static class ContainerBuilderExtensions {
     public static async Task<IContainerBuilder> Install(this Configuration configuration, string projectFolder) {
         var logger = NullLogger.Instance;
 
+        Directory.Delete(projectFolder, true);
+
         var providers = new List<Lazy<INuGetResourceProvider>>();
         providers.AddRange(Repository.Provider.GetCoreV3());
 
-        var project = new LollipopsProject(projectFolder, [.. configuration.Packages]);
+        var project = new FolderNuGetProject(projectFolder);
         var settings = Settings.LoadDefaultSettings(projectFolder, null, new MachineWideSettings());
         var packageSourceProvider = new PackageSourceProvider(settings);
         var sourceRepositoryProvider = new SourceRepositoryProvider(packageSourceProvider, providers);
