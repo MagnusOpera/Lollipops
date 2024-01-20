@@ -54,10 +54,8 @@ public static class ContainerBuilderExtensions {
             PackagesFolderNuGetProject = project
         };
 
-        var defaultSourceRepository = new SourceRepository(new PackageSource("https://api.nuget.org/v3/index.json"), providers);
-        defaultSourceRepository.GetResource<PackageMetadataResource>();
-
-        var repository = getSourceRepository();
+        var defaultRepository = getSourceRepository(null);
+        var repository = getSourceRepository(configuration.Source);
 
         var packageMetadataResource = await repository.GetResourceAsync<PackageMetadataResource>();
         using var sourceCacheContext = new SourceCacheContext();
@@ -85,13 +83,11 @@ public static class ContainerBuilderExtensions {
 
 
 
-        SourceRepository getSourceRepository() {
-            if (configuration.Source is null) {
+        SourceRepository getSourceRepository(string? url) {
+            if (url is null) {
                 return sourceRepositoryProvider.GetRepositories().First();
             } else {
-                var sourceRepository = new SourceRepository(new PackageSource(configuration.Source), providers);
-                sourceRepository.GetResource<PackageMetadataResource>();
-                return sourceRepository;
+                return new SourceRepository(new PackageSource(url), providers);
             }
         }
 
@@ -205,7 +201,7 @@ public static class ContainerBuilderExtensions {
                                                              projectContext,
                                                              downloadContext,
                                                              [repository],
-                                                             [defaultSourceRepository],
+                                                             [defaultRepository],
                                                              CancellationToken.None);
                 }
             }
