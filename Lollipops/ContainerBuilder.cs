@@ -70,15 +70,12 @@ public static class ContainerBuilderExtensions {
         var nugetFramework = NuGetFramework.ParseFrameworkName(targetFramework!, frameworkNameProvider)!;
 
 
-        foreach (var package in configuration.Packages) {
-            // Console.WriteLine($"Adding package '{package}");
-            await installPackage(package);
-        }
+        await Parallel.ForEachAsync(configuration.Packages,
+                                    async (package, _) => await installPackage(package));
 
         var files = getProjectFiles();
         var projectCatalog = new AggregateCatalog();
         foreach (var file in files) {
-            // Console.WriteLine($"\tAdding file '{file}");
             var assemblyCatalog = new AssemblyCatalog(file);
             projectCatalog.Catalogs.Add(assemblyCatalog);
         }
