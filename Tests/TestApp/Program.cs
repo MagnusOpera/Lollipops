@@ -1,43 +1,26 @@
-﻿using System.ComponentModel.Composition;
-using System.ComponentModel.Composition.Hosting;
-using System.Reflection;
+﻿using System.Reflection;
 using Lollipops;
 
+var appDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
+var slnDir = Path.GetFullPath(Path.Combine(appDir, "../../../../.."));
+
+Console.WriteLine(slnDir);
+var nugetLocal = Path.GetFullPath(Path.Combine(slnDir, ".nugets"));
+var projectDir = Path.GetFullPath(Path.Combine(slnDir, ".lollipops"));
 
 var config = new Configuration
 {
-    Packages = [new Package { Id = "MagnusOpera.PresqueYaml", Version = "0.24.0" },
-                new Package { Id = "MagnusOpera.PresqueYaml", Version = "0.23.0" }]
+    Source = nugetLocal,
+    Packages = [new Package { Id = "TestCSharp" },
+                new Package { Id = "TestFSharp" }]
 };
 
-var currentDir = Environment.CurrentDirectory;
-var containerBuilder = await config.Install(Path.Combine(currentDir, "test-lollipops"));
+var containerBuilder = await config.Install(projectDir);
 
-var programAssembly = new AssemblyCatalog(Assembly.GetExecutingAssembly());
-containerBuilder.Add(programAssembly);
 var container = containerBuilder.Build();
 
-var toto = container.Resolve<IExtension>("toto");
-toto.Say("Hello Lollipops");
+var csharp = container.Resolve<TestCommon.ILogger>("TestCSharp");
+csharp.Log("Hello Lollipops");
 
-var titi = container.Resolve<IExtension>("titi");
-titi.Say("Hello Lollipops");
-
-public interface IExtension {
-    void Say(string msg);
-}
-
-
-[Export("toto", typeof(IExtension))]
-public class Toto : IExtension {
-    public void Say(string msg) {
-        Console.WriteLine($"{msg} from Toto");
-    }
-}
-
-[Export("titi", typeof(IExtension))]
-public class Titi : IExtension {
-    public void Say(string msg) {
-        Console.WriteLine($"{msg} from Titi");
-    }
-}
+var fsharp = container.Resolve<TestCommon.ILogger>("TestFSharp");
+fsharp.Log("Hello Lollipops");

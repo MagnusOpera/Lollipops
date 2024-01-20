@@ -10,5 +10,11 @@
 
   <ItemGroup>
     <ProjectReference Include="../../Lollipops/Lollipops.csproj" />
+    <ProjectReference Include="../TestCommon/TestCommon.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.ComponentModel.Composition" Version="8.0.0" />
+  </ItemGroup>
+
 </Project>

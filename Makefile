@@ -8,7 +8,7 @@ test:
 	dotnet run --project Tests/TestApp
 
 nuget:
-	dotnet pack -c $(config) /p:Version=$(version) -o out
+	dotnet pack -c $(config) /p:Version=$(version) -o .nugets
 
 publish: out/*.nupkg
 	@for file in $^ ; do \
