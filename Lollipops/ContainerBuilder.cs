@@ -46,7 +46,7 @@ public static class ContainerBuilderExtensions {
         var providers = new List<Lazy<INuGetResourceProvider>>();
         providers.AddRange(Repository.Provider.GetCoreV3());
 
-        var project = new LollipopsProject(projectFolder);
+        var project = new LollipopsProject(projectFolder, [.. configuration.Packages]);
         var settings = Settings.LoadDefaultSettings(projectFolder, null, new MachineWideSettings());
         var packageSourceProvider = new PackageSourceProvider(settings);
         var sourceRepositoryProvider = new SourceRepositoryProvider(packageSourceProvider, providers);
@@ -135,13 +135,11 @@ public static class ContainerBuilderExtensions {
 
 
 
-        async Task<PackageIdentity> installPackage(Package package) {
+        async Task installPackage(Package package) {
             var metadata = await searchPackage(package)
                          ?? throw new Exception($"Package '{package}' is not available");
 
             await downloadPackage();
-
-            return metadata.Identity;
 
 
             async Task<IPackageSearchMetadata?> searchPackage(Package package) {
