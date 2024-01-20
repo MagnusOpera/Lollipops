@@ -476,5 +476,8 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-out
 .idea
+
+# misc
+.nugets
+.lollipops

@@ -4,16 +4,11 @@ version ?= 0.0.0
 build:
 	dotnet build -c $(config)
 
-run:
-	dotnet run --project Lollipops.Tests
+nuget:
+	dotnet pack -c $(config) /p:Version=$(version) -o .nugets
 
 test:
-	dotnet test -c $(config) --logger "trx;LogFileName=test-results.trx"
+	dotnet run -c $(config) --project Tests/TestApp
 
-nuget:
-	dotnet pack -c $(config) /p:Version=$(version) -o out
-
-publish: out/*.nupkg
-	@for file in $^ ; do \
-		dotnet nuget push $$file -k $(nugetkey) -s https://api.nuget.org/v3/index.json --skip-duplicate ; \
-    done
+publish:
+	dotnet nuget push .nugets/MagnusOpera.Lollipops.$(version).nupkg -k $(nugetkey) -s https://api.nuget.org/v3/index.json --skip-duplicate

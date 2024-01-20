@@ -1,10 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,6 +13,27 @@
     <PackageReference Include="NuGet.LibraryModel" Version="6.8.0" />
     <PackageReference Include="NuGet.Commands" Version="6.8.0" />
     <PackageReference Include="NuGet.Resolver" Version="6.8.0" />
+    <PackageReference Include="NuGet.PackageManagement" Version="6.8.0" />
+    <PackageReference Include="Microsoft.DotNet.PlatformAbstractions" Version="3.1.6" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\NUGET.md" Pack="true" PackagePath="\" />
+    <None Include="..\LICENSE" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <!-- https://docs.microsoft.com/en-us/nuget/reference/msbuild-targets#packing-using-a-nuspec -->
+    <PackageId>MagnusOpera.Lollipops</PackageId>
+    <Authors>Pierre Chalamet</Authors>
+    <Title>MagnusOpera.PresqueYaml</Title>
+    <Description>Lollipops: host plugins from NuGet and exposed via MEF.</Description>
+    <Copyright>Copyright 2024 Magnus Opera</Copyright>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/MagnusOpera/Lollipops</PackageProjectUrl>
+    <RepositoryUrl>git@github.com:MagnusOpera/Lollipops.git</RepositoryUrl>
+    <PackageTags>hosting;NuGet;MEF;Plugin;F#;C#</PackageTags>
+    <PackageReadmeFile>NUGET.md</PackageReadmeFile>
+  </PropertyGroup>
 
 </Project>

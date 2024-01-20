@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Logger.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../TestCommon/TestCommon.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <PackageId>TestFSharp</PackageId>
+    <Title>TestFSharp</Title>
+    <Description>TestFSharp</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.ComponentModel.Composition" Version="8.0.0" />
+  </ItemGroup>
+
+</Project>
