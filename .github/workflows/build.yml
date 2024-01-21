@@ -22,10 +22,7 @@ jobs:
         with:
           dotnet-version: 8.0.101
 
-      - name: Build
-        run: make nuget config=Release
-
-      - name: Test
+      - name: Build & Test
         run: make test config=Release
 
       - name: Upload Nuget

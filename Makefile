@@ -7,8 +7,8 @@ build:
 nuget:
 	dotnet pack -c $(config) /p:Version=$(version) -o .nugets
 
-test:
+test: nuget
 	dotnet run -c $(config) --project Tests/TestApp
 
-publish:
+publish: nuget
 	dotnet nuget push .nugets/MagnusOpera.Lollipops.$(version).nupkg -k $(nugetkey) -s https://api.nuget.org/v3/index.json --skip-duplicate
