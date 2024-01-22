@@ -1,4 +1,4 @@
-namespace MagnusOpera.Lollipops;
+﻿namespace MagnusOpera.Lollipops;
 
 using System.Reflection;
 using System.Runtime.Versioning;
@@ -113,26 +113,6 @@ public static class ContainerBuilderExtensions {
 
             return [.. dependencyFiles];
         }
-
-
-        // Task<string[]> getPackageFiles(PackageIdentity packageId) {
-        //     var allPackageIds = LocalFolderUtility.GetPackagesV2(downloadFolder, logger).Select(x => x.Identity).ToArray();
-
-        //     var dependencyFiles = new List<string>();
-        //     var packageFilePath = project.GetInstalledPackageFilePath(packageId);
-        //     using var archiveReader = new PackageArchiveReader(packageFilePath, null, null);
-        //     var itemGroups = archiveReader.GetReferenceItems();
-        //     var mostCompatibleFramework = new FrameworkReducer().GetNearest(nugetFramework, itemGroups.Select(x => x.TargetFramework));
-
-        //     var mostCompatibleGroup = itemGroups.FirstOrDefault(i => i.TargetFramework == mostCompatibleFramework)
-        //                             ?? throw new Exception($"Package '{packageId}' is not compatible with {mostCompatibleFramework}");
-
-        //     var nugetPackagePath = project.GetInstalledPath(packageId);
-        //     var nugetFiles = mostCompatibleGroup.Items.Select(item => Path.Combine(nugetPackagePath, item)).ToArray();
-        //     dependencyFiles.AddRange(nugetFiles);
-
-        //     return Task.FromResult(dependencyFiles.ToArray());
-        // }
 
 
 
