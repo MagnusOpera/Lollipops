@@ -1,5 +1,7 @@
 ﻿using System.Reflection;
 using MagnusOpera.Lollipops;
+using System.ComponentModel.Composition;
+using System.ComponentModel.Composition.Hosting;
 
 // find solution root dir
 var appDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
@@ -17,6 +19,8 @@ var config = new Configuration
                 new Package { Id = "TestFSharp" }]
 };
 var containerBuilder = await config.Install(projectDir);
+var programAssembly = new AssemblyCatalog(Assembly.GetExecutingAssembly());
+containerBuilder.Add(programAssembly);
 var container = containerBuilder.Build();
 
 // invoke plugins
@@ -25,3 +29,17 @@ csharp.Log("Hello Lollipops");
 
 var fsharp = container.Resolve<TestCommon.ILogger>("TestFSharp");
 fsharp.Log("Hello Lollipops");
+
+var local = container.Resolve<TestCommon.ILogger>("Local");
+local.Log("Hello Lollipops");
+
+
+
+
+
+[Export("Local", typeof(TestCommon.ILogger))]
+public class Logger : TestCommon.ILogger {
+    public void Log(string msg) {
+        Console.WriteLine($"{msg} from Local !");
+    }
+}
