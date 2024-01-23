@@ -20,12 +20,13 @@ using NuGet.Protocol;
 using NuGet.ProjectManagement;
 
 public interface IContainerBuilder {
-    void Add(ComposablePartCatalog part);
+    void Add(Assembly assembly);
     IContainer Build();
 }
 
 internal class ContainerBuilder(AggregateCatalog aggregateCatalog) : IContainerBuilder {
-    public void Add(ComposablePartCatalog part) {
+    public void Add(Assembly assembly) {
+        var part = new AssemblyCatalog(assembly);
         aggregateCatalog.Catalogs.Add(part);
     }
 

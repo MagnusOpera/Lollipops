@@ -1,7 +1,6 @@
 ﻿using System.Reflection;
 using MagnusOpera.Lollipops;
 using System.ComponentModel.Composition;
-using System.ComponentModel.Composition.Hosting;
 
 // find solution root dir
 var appDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
@@ -19,8 +18,7 @@ var config = new Configuration
                 new Package { Id = "TestFSharp" }]
 };
 var containerBuilder = await config.Install(projectDir);
-var programAssembly = new AssemblyCatalog(Assembly.GetExecutingAssembly());
-containerBuilder.Add(programAssembly);
+containerBuilder.Add(Assembly.GetExecutingAssembly());
 var container = containerBuilder.Build();
 
 // invoke plugins
