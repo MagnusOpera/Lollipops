@@ -7,7 +7,7 @@ var appDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
 var slnDir = Path.GetFullPath(Path.Combine(appDir, "../../../../.."));
 
 // paths for nuget local folder & install folder
-var nugetLocal = Path.GetFullPath(Path.Combine(slnDir, ".nugets"));
+var nugetLocal = Path.GetFullPath(Path.Combine(slnDir, ".out"));
 var projectDir = Path.GetFullPath(Path.Combine(slnDir, ".lollipops"));
 
 // build container

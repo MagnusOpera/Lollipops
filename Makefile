@@ -6,7 +6,7 @@ build:
 	dotnet build -c $(config)
 
 dist:
-	dotnet pack -c $(config) /p:Version=$(version) -o .nugets
+	dotnet pack -c $(config) /p:Version=$(version) -o .out
 
 test: dist
 	dotnet run -c $(config) --project Tests/TestApp
