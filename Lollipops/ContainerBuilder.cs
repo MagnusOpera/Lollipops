@@ -75,6 +75,13 @@ public static class ContainerBuilderExtensions {
                                     async (package, _) => await installPackage(package));
 
         var files = getProjectFiles();
+        if (configuration.Debug) {
+            Console.WriteLine("Lollipops Assemblies:");
+            foreach(var file in files) {
+                Console.WriteLine($"\t{file}");
+            }
+        }
+
         var projectCatalog = new AggregateCatalog();
         foreach (var file in files) {
             var assemblyCatalog = new AssemblyCatalog(file);
